@@ -7,11 +7,12 @@ export default class FoodBox extends Component {
         quantity: 1
     }
 
-    handleQuantity = (event) => {
+    handleQuantityChange = (event) => {
 
         this.setState({
             quantity: event.target.value
         })
+
         console.log(this.props.food);
     }
 
@@ -38,14 +39,17 @@ export default class FoodBox extends Component {
                         <div className="field has-addons">
                             <div className="control">
                                 <input
-                                    onChange={this.handleQuantity}
+                                    onChange={this.handleQuantityChange}
                                     className="input"
                                     type="number"
                                     value={this.state.quantity} />
                             </div>
                             <div className="control">
                                 <button
-                                    onClick={() => { this.props.handleAddItem(food, this.state.quantity) }}
+                                    onClick={() => {
+                                        this.props.onAdd(food, Number(this.state.quantity));
+                                        // this.setState({ quantity: 1 });
+                                    }}
                                     className="button is-info">+</button>
                             </div>
                         </div>

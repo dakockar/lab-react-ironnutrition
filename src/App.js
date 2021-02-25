@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import './App.css';
-import foodsJson from './foods.json';
+import foods from './foods.json';
 import FoodBox from './components/FoodBox.js';
 import AddForm from "./components/AddForm.js"
 import Search from './components/Search';
@@ -10,8 +10,7 @@ import Total from './components/Total';
 export default class App extends Component {
 
   state = {
-    foods: foodsJson,
-    clonedFoods: foodsJson,
+    allFoods: foods,
     showForm: false,
     todaysFoods: []
   }
@@ -37,7 +36,7 @@ export default class App extends Component {
 
     console.log(name, calories, image);
 
-    const food = {
+    const newFood = {
       name,
       calories,
       image,
@@ -45,57 +44,106 @@ export default class App extends Component {
     }
 
     this.setState({
-      foods: [food, ...this.state.foods],
-      clonedFoods: [food, ...this.state.clonedFoods],
+      allFoods: [newFood, ...this.state.allFoods],
       showForm: false
     })
   }
 
-  handleChange = (event) => {
-    const { foods } = this.state;
+  handleSearch = (event) => {
 
     console.log(event.target.value);
     let searchTerm = event.target.value;
 
+    // this filters the data we imported from json (foods array imported)
     let filteredFoods = foods.filter(food => food.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
     this.setState({
-      clonedFoods: filteredFoods
+      allFoods: filteredFoods
     })
   }
 
-  handleAddItem = (food, quantity) => {
-    console.log(food);
-    // food.quantity = quantity;
+  handleAddTodaysFood = (food, quantity) => {
 
-    let newFood = { ...food, quantity }
+    const { todaysFoods } = this.state;
+
+    let cloneTodaysFoods = JSON.parse(JSON.stringify(todaysFoods));
+
+    for (let singleFood of cloneTodaysFoods) {
+      if (singleFood.name === food.name) {
+        singleFood.quantity += quantity;
+
+        this.setState({
+          todaysFoods: cloneTodaysFoods
+        })
+        return;
+      }
+    }
+
+    let newFood = { ...food, quantity };
 
     this.setState({
-      todaysFoods: [...this.state.todaysFoods, newFood]
+      todaysFoods: [...todaysFoods, newFood]
+    });
+
+    // longer solution
+
+    // const { todaysFoods } = this.state;
+    // let cloneTodaysFoods = JSON.parse(JSON.stringify(todaysFoods));
+    // let isFoodPresent = false;
+
+    // for (let singleFood of cloneTodaysFoods) {
+    //   if (singleFood.name === food.name) {
+    //     singleFood.quantity += quantity;
+    //     isFoodPresent = true;
+    //     break;
+    //   }
+    // }
+
+    // if (isFoodPresent) {
+    //   this.setState({
+    //     todaysFoods: cloneTodaysFoods
+    //   })
+    // }
+    // else {
+    //   let newFood = { ...food, quantity }
+
+    //   this.setState({
+    //     todaysFoods: [...todaysFoods, newFood]
+    //   })
+    // }
+  }
+
+
+  handleDelete = (foodName) => {
+    let filteredTodaysFoods = this.state.todaysFoods.filter(food => food.name !== foodName);
+
+    this.setState({
+      todaysFoods: filteredTodaysFoods
     })
   }
 
+
   render() {
-    const { clonedFoods, showForm, todaysFoods } = this.state;
+    const { allFoods, showForm, todaysFoods } = this.state;
 
     return (
       <div className="App">
         <h1>IronNutrition</h1>
-        <Search handleChange={this.handleChange} />
+        <Search handleChange={this.handleSearch} />
         <div className="columns">
           <div className="column">
             {
               showForm ? <AddForm onSubmit={this.handleSubmit} /> : <button onClick={this.handleShow}>Show</button>
             }
             {
-              clonedFoods.map((food, index) => {
-                return <FoodBox handleAddItem={this.handleAddItem} food={food} key={index} />
+              allFoods.map((food) => {
+                return <FoodBox onAdd={this.handleAddTodaysFood} food={food} key={food.name} />
               })
             }
           </div>
           <div className="column">
             <h2>Today's Foods</h2>
-            <Total todaysFoods={todaysFoods} />
+            <Total todaysFoods={todaysFoods} onDelete={this.handleDelete} />
           </div>
         </div>
       </div>
